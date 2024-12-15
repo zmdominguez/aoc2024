@@ -19,3 +19,13 @@ fun String.md5() = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteA
  * The cleaner shorthand for printing output.
  */
 fun Any?.println() = println(this)
+
+
+fun String?.indicesOf(substr: String, ignoreCase: Boolean = true): List<Int> {
+    return this?.let {
+        val regex = if (ignoreCase) Regex(substr, RegexOption.IGNORE_CASE) else Regex(substr)
+        regex.findAll(this).map { it.range.first }.toList()
+    } ?: emptyList()
+}
+
+fun String.replaceCharAt(index: Int, char: String) = this.replaceRange(index..index, char)
