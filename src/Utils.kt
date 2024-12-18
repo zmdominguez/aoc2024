@@ -29,3 +29,37 @@ fun String?.indicesOf(substr: String, ignoreCase: Boolean = true): List<Int> {
 }
 
 fun String.replaceCharAt(index: Int, char: String) = this.replaceRange(index..index, char)
+
+data class Location(val row: Int, val column: Int) {
+    override fun toString(): String {
+        return "[row = $row, column = $column]"
+    }
+}
+
+fun List<String>.getStringToLeftOf(lastLocation: Location): String {
+    return this[lastLocation.row].substring(0..<lastLocation.column)
+}
+
+fun List<String>.getStringToRightOf(lastLocation: Location): String {
+    return this[lastLocation.row].substring(lastLocation.column + 1)
+}
+
+fun List<String>.getStringAbove(lastLocation: Location): String {
+    var tempLine = ""
+    for (index in 0..<lastLocation.row) {
+        tempLine += this[index][lastLocation.column]
+    }
+
+    // first char is from y=0
+    return tempLine
+}
+
+fun List<String>.getStringBelow(lastLocation: Location, startInclusive: Boolean = false): String {
+    var tempLine = ""
+    val firstIndexY = if (startInclusive) lastLocation.row else lastLocation.row + 1
+    for (index in firstIndexY..<this.size) {
+        tempLine += this[index][lastLocation.column]
+    }
+    // first char is from y+1
+    return tempLine
+}
