@@ -9,12 +9,6 @@
  *
  */
 
-private data class Location(val row: Int, val column: Int) {
-    override fun toString(): String {
-        return "[row = $row, column = $column]"
-    }
-}
-
 private sealed class WordDirection {
     data object North : WordDirection() {
         override fun getNextLocation(startLocation: Location) = Location(startLocation.row-1, startLocation.column)
