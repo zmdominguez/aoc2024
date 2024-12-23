@@ -12,8 +12,8 @@
 private data class Disk(
     val diskSize: Int,
     var freeSpace: Int,
-    val status: DiskStatus,
-    val fillStatus: FillStatus,
+    val status: DiskStatus = DiskStatus.Default,
+    val fillStatus: FillStatus = FillStatus.Default,
     val fillers: MutableList<Int> = mutableListOf(),
 ) {
     override fun toString(): String {
@@ -23,13 +23,11 @@ private data class Disk(
 
 private enum class DiskStatus {
     Default,
-    Immovable,
     Moved,
 }
 
 private enum class FillStatus {
     Default,
-    Unfillable,
     Filled,
 }
 
@@ -60,22 +58,8 @@ fun main() {
                     }
                 }
 
-                if (disk.fillStatus == FillStatus.Unfillable) {
-                    for (i in 1..disk.freeSpace) {
-                        append(".")
-                    }
-                } else {
-                    disk.fillers.forEach {
-                        append("($it)")
-                    }
-
-                    // It may not be fully filled
-                    val remaining = disk.freeSpace - disk.fillers.size
-                    if (remaining > 0) {
-                        for (i in 1..remaining) {
-                            append(".")
-                        }
-                    }
+                disk.fillers.forEach {
+                    append("($it)")
                 }
             }
         }
@@ -116,13 +100,16 @@ fun main() {
     }
 
     fun part2(input: List<String>): Long {
+
+        //val altTestInput = "9953877292941" //5768
+        //val diskMapRaw = getDiskMap(altTestInput).map { it.toMutableList() }.toMutableList()
+
         val diskMapRaw = getDiskMap(input[0]).map { it.toMutableList() }.toMutableList()
         val diskMap = diskMapRaw.mapIndexed { index, disk ->
-
-            Disk(status = if (index == 0) DiskStatus.Immovable else DiskStatus.Default ,
-                fillStatus = if (disk[1] == 0) FillStatus.Unfillable else FillStatus.Default,
+            Disk(
                 diskSize = disk[0],
-                freeSpace = disk[1])
+                freeSpace = disk[1]
+            )
         }.toMutableList()
 
         val iterator = diskMap.listIterator()
@@ -133,27 +120,29 @@ fun main() {
             val freeSpace = disk.freeSpace
 
             // Check for anything that can fill up the space
-            // Anything that is Default, Moved, Immovable can be filled up
             var availableSpace = freeSpace
-            if (disk.fillStatus == FillStatus.Unfillable || disk.fillStatus == FillStatus.Filled) continue
+            if (disk.fillStatus == FillStatus.Filled) continue
 
             for (lastIndex in diskMap.lastIndex downTo index) {
 
                 // We have reached the end, nothing else fits
                 if (lastIndex == index) {
-                    val diskUpdated = if (disk.fillers.isEmpty()) {
-                        disk.copy(fillStatus = FillStatus.Unfillable)
-                    } else {
-                        disk.copy(
-                            freeSpace = disk.fillers.size + disk.freeSpace,
-                            fillStatus = FillStatus.Filled)
+                    val fillers = disk.fillers
+                    for (count in 1..availableSpace) {
+                        fillers.add(0)
                     }
+
+                    val diskUpdated = disk.copy(
+                        fillers = fillers,
+                        fillStatus = FillStatus.Filled
+                    )
+
                     iterator.set(diskUpdated)
                     break
                 }
 
                 val leftMost = diskMap[lastIndex]
-                if (leftMost.status in listOf(DiskStatus.Immovable, DiskStatus.Moved)) continue
+                if (leftMost.status in listOf(DiskStatus.Moved)) continue
 
                 val requiredInsertSize = leftMost.diskSize
 
@@ -189,19 +178,9 @@ fun main() {
                 }
             }
 
-            if (disk.fillStatus == FillStatus.Unfillable) {
-                checkSumIndex += disk.freeSpace
-            } else {
-                disk.fillers.forEach {
-                    checkSum += checkSumIndex * it
-                    checkSumIndex++
-                }
-
-                // It may not be fully filled
-                val remaining = disk.freeSpace - disk.fillers.size
-                if (remaining > 0) {
-                    checkSumIndex += remaining
-                }
+            disk.fillers.forEach {
+                checkSum += checkSumIndex * it
+                checkSumIndex++
             }
         }
 
